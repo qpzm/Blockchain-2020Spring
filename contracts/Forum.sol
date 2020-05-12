@@ -1,6 +1,6 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.6.0;
 
-import "github/OpenZeppelin/openzeppelin-contracts/contracts/ownership/Ownable.sol";
+import "github/OpenZeppelin/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract Forum is Ownable {
 
@@ -15,14 +15,17 @@ contract Forum is Ownable {
 
         uint parentId;
 
+        string name;
         string title;
         string body;
         string metadata;
     }
 
     event NewPost(address indexed author, uint indexed parentId);
+    event CreateNewAccount(address indexed author, string indexed name);
 
     postOne[] public post;
+    mapping(address => string) byAuthorName;
     mapping(address => uint[]) byAuthorIndex;
     mapping(uint => uint[]) byParentIdIndex;
 
@@ -47,6 +50,7 @@ contract Forum is Ownable {
         p.author = msg.sender;
         p.last_update = uint32(now);
         p.created = uint32(now);
+        p.name = byAuthorName[msg.sender];
         p.title = title;
         p.body = body;
         p.metadata = metadata;
@@ -66,39 +70,61 @@ contract Forum is Ownable {
         emit NewPost(msg.sender, parentId);
     }
 
-    function getIdsByAuthor(address author, uint page, int offset) public view returns (uint[] memory) {
+    function getIdsByAuthor(address author, uint page, uint offset) public view returns (uint[] memory) {
         page = (page == 0) ? 50 : page;
-        uint returnSize = (byAuthorIndex[author].length < page) ? byAuthorIndex[author].length : page;
+        uint returnIndex = (byAuthorIndex[author].length > page * offset) ? byAuthorIndex[author].length - page * offset : 0;
+        uint returnSize = (returnIndex < page) ? returnIndex : page;
+
+        require(returnSize > 0);
 
         uint[] memory ids = new uint[](returnSize);
         uint j;
 
-        for (uint i = byAuthorIndex[author].length - page * uint(-offset) - 1; i >= 0 && page >= 0; --i) {
+        for (uint i = returnIndex - 1; returnSize > 0; --i) {
             ids[j++] = byAuthorIndex[author][i];
-            --page;
-            
-            // FIXME: workaround fix to strange underflow issue
-            if (i <= 0) break;
+            --returnSize;
         }
 
         return ids;
     }
 
-    function getIdsByParentId(uint id, uint page, int offset) public view returns (uint[] memory) {
+    function getIdsByParentId(uint id, uint page, uint offset) public view returns (uint[] memory) {
         page = (page == 0) ? 50 : page;
-        uint returnSize = (byParentIdIndex[id].length < page) ? byParentIdIndex[id].length : page;
+        uint returnIndex = (byParentIdIndex[id].length > page * offset) ? byParentIdIndex[id].length - page * offset : 0;
+        uint returnSize = (returnIndex < page) ? returnIndex : page;
+
+        require(returnSize > 0);
 
         uint[] memory ids = new uint[](returnSize);
         uint j;
 
-        for (uint i = byParentIdIndex[id].length - page * uint(-offset) - 1; i >= 0 && page >= 0; --i) {
+        for (uint i = returnIndex - 1; returnSize > 0; --i) {
             ids[j++] = byParentIdIndex[id][i];
-            --page;
-            
-            // FIXME: workaround fix to strange underflow issue
-            if (i <= 0) break;
+            --returnSize;
         }
 
         return ids;
     }
+
+    modifier onlyRegistered(address _address) {
+        require(keccak256(abi.encodePacked(byAuthorName[_address])) != keccak256(abi.encodePacked("")), "create an account first");
+        _;
+    }
+
+    function createNewAccount(string memory _name) public {
+        require(keccak256(abi.encodePacked(_name)) != keccak256(abi.encodePacked("")), "enter at least 1 letter");
+        require(keccak256(abi.encodePacked(byAuthorName[msg.sender])) == keccak256(abi.encodePacked("")), "already created an account");
+        byAuthorName[msg.sender] = _name;
+
+        emit CreateNewAccount(msg.sender, _name);
+    }
+
+    function setName(string memory _name) public onlyRegistered(msg.sender) {
+        byAuthorName[msg.sender] = _name;
+    }
+
+    function getName() public view onlyRegistered(msg.sender) returns (string memory) {
+        return byAuthorName[msg.sender];
+    }
+
 }

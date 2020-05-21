@@ -66,39 +66,29 @@ contract Forum is Ownable {
         emit NewPost(msg.sender, parentId);
     }
 
-    function getIdsByAuthor(address author, uint page, uint offset) public view returns (uint[] memory) {
+    function _getIds(uint[] storage index, uint page, uint offset) internal view returns (uint[] memory) {
         page = (page == 0) ? 50 : page;
-        uint returnIndex = (byAuthorIndex[author].length > page * offset) ? byAuthorIndex[author].length - page * offset : 0;
+        uint returnIndex = (index.length > page * offset) ? index.length - page * offset : 0;
         uint returnSize = (returnIndex < page) ? returnIndex : page;
-        
+
         require(returnSize > 0);
-        
+
         uint[] memory ids = new uint[](returnSize);
         uint j;
-   
+
         for (uint i = returnIndex - 1; returnSize > 0; --i) {
-            ids[j++] = byAuthorIndex[author][i];
+            ids[j++] = index[i];
             --returnSize;
         }
 
         return ids;
     }
 
-    function getIdsByParentId(uint id, uint page, uint offset) public view returns (uint[] memory) {
-        page = (page == 0) ? 50 : page;
-        uint returnIndex = (byParentIdIndex[id].length > page * offset) ? byParentIdIndex[id].length - page * offset : 0;
-        uint returnSize = (returnIndex < page) ? returnIndex : page;
-        
-        require(returnSize > 0);
-        
-        uint[] memory ids = new uint[](returnSize);
-        uint j;
-   
-        for (uint i = returnIndex - 1; returnSize > 0; --i) {
-            ids[j++] = byParentIdIndex[id][i];
-            --returnSize;
-        }
+    function getIdsByAuthor(address author, uint page, uint offset) public view returns (uint[] memory) {
+        return _getIds(byAuthorIndex[author], page, offset);
+    }
 
-        return ids;
+    function getIdsByParentId(uint id, uint page, uint offset) public view returns (uint[] memory) {
+        return _getIds(byParentIdIndex[id], page, offset);
     }
 }

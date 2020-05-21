@@ -67,7 +67,7 @@ contract Forum is Ownable {
     }
 
     function _getIds(uint[] storage index, uint page, uint offset) internal view returns (uint[] memory) {
-        page = (page == 0) ? 50 : page;
+        page = (page == 0) ? 25 : page;
         uint returnIndex = (index.length > page * offset) ? index.length - page * offset : 0;
         uint returnSize = (returnIndex < page) ? returnIndex : page;
 

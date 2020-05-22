@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
 
-import "github/OpenZeppelin/openzeppelin-contracts/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
-contract Forum is Ownable {
+contract Noncense is Ownable {
 
     struct postOne {
         address author;
@@ -20,7 +20,7 @@ contract Forum is Ownable {
         string metadata;
     }
 
-    event NewPost(address indexed author, uint indexed parentId);
+    event NewPost(address indexed author, uint indexed id, uint indexed parentId);
 
     postOne[] public post;
     mapping(address => uint[]) byAuthorIndex;
@@ -63,7 +63,7 @@ contract Forum is Ownable {
         byParentIdIndex[parentId].push(post.length);
         post.push(p);
 
-        emit NewPost(msg.sender, parentId);
+        emit NewPost(msg.sender, post.length-1, parentId);
     }
 
     /**

@@ -66,29 +66,46 @@ contract Forum is Ownable {
         emit NewPost(msg.sender, parentId);
     }
 
-    function _getIds(uint[] storage index, uint page, uint offset) internal view returns (uint[] memory) {
+    /**
+     * Indices is considered to be sorted in descending order of time.
+     * With zero or positive offset, getIds... will return ids of latests posts in descending order.
+     * With negative offset, getIds... will return ids in ascending order from oldest post.
+     */
+    function _getIds(uint[] storage index, uint page, int offset) internal view returns (uint[] memory) {
         page = (page == 0) ? 25 : page;
-        uint returnIndex = (index.length > page * offset) ? index.length - page * offset : 0;
-        uint returnSize = (returnIndex < page) ? returnIndex : page;
 
-        require(returnSize > 0);
+        uint pos;
+        uint size;
 
-        uint[] memory ids = new uint[](returnSize);
-        uint j;
+        if (offset >= 0) {
+            pos = index.length - page * uint(offset) - 1;
+            size = (pos + 1 >= page) ? page : pos + 1;
+        } else {
+            pos = page * (uint(-offset) - 1);
+            size = (index.length - pos >= page) ? page : index.length - pos;
+        }
 
-        for (uint i = returnIndex - 1; returnSize > 0; --i) {
-            ids[j++] = index[i];
-            --returnSize;
+        uint[] memory ids = new uint[](size);
+
+        while (size > 0) {
+            ids[ids.length - size] = index[pos];
+            size -= 1;
+
+            if (offset >= 0) {
+                pos -= 1;
+            } else {
+                pos += 1;
+            }
         }
 
         return ids;
     }
 
-    function getIdsByAuthor(address author, uint page, uint offset) public view returns (uint[] memory) {
+    function getIdsByAuthor(address author, uint page, int offset) public view returns (uint[] memory) {
         return _getIds(byAuthorIndex[author], page, offset);
     }
 
-    function getIdsByParentId(uint id, uint page, uint offset) public view returns (uint[] memory) {
+    function getIdsByParentId(uint id, uint page, int offset) public view returns (uint[] memory) {
         return _getIds(byParentIdIndex[id], page, offset);
     }
 }

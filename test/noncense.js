@@ -35,4 +35,14 @@ contract("Noncense", accounts => {
     // e.g. expect([1, 2]).not.to.equal([1,2]) because [1,2] !== [1,2]
     expect(childIds.map(x => x.toNumber())).to.eql([childId]);
   });
+
+  it("getRecursiveChildrenIds() should return recursive children ids in DFS order", async () => {
+    await noncense.newPost("I'm a father", 0, "", "");
+    await noncense.newPost("I'm an uncle", 0, "", "");
+    await noncense.newPost("I'm a son", 1, "", "");
+    await noncense.newPost("I'm a grandchild", 3, "", "");
+
+    const response = await noncense.getRecursiveChildrenIds(0)
+    expect(response.map(x => x.toNumber())).to.eql([1,3,4,2]);
+  });
 });

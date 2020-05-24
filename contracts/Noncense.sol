@@ -108,4 +108,47 @@ contract Noncense is Ownable {
     function getIdsByParentId(uint id, uint page, int offset) public view returns (uint[] memory) {
         return _getIds(byParentIdIndex[id], page, offset);
     }
+
+    function getRecursiveChildrenIds(uint id) checkId(id) public view returns (uint[] memory) {
+        uint size = getRecursiveChildrenCounts(id);
+        uint[] memory ids = new uint[](size);
+        ids[0] = id;
+        _getRecursiveChildrenIds(id, ids, 0);
+        return ids;
+    }
+
+    function _getRecursiveChildrenIds(uint id, uint[] memory arr, uint start) internal view returns (uint) {
+        postOne memory p = post[id];
+
+        if(p.children == 0) {
+            return start;
+        }
+
+        uint[] memory childrenIds = byParentIdIndex[id];
+        for(uint i=0; i < childrenIds.length; i++) {
+            arr[start] = childrenIds[i];
+            start += 1;
+            start = _getRecursiveChildrenIds(childrenIds[i], arr, start);
+        }
+        return start;
+    }
+
+    function getRecursiveChildrenCounts(uint id) checkId(id) internal view returns (uint) {
+        postOne memory p = post[id];
+        if(p.children == 0) {
+            return 0;
+        }
+
+        uint count = p.children;
+        uint[] memory childrenIds = byParentIdIndex[id];
+        for(uint i=0; i < childrenIds.length; i++) {
+             count += getRecursiveChildrenCounts(childrenIds[i]);
+        }
+        return count;
+    }
+
+    modifier checkId(uint id) {
+        require(id >= 0 && id < post.length);
+        _;
+    }
 }

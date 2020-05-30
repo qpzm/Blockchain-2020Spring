@@ -57,8 +57,6 @@ contract Noncense is Ownable {
         p.parentId = parentId;
         p.depth = post[parentId].depth + 1;
 
-        require(p.depth <= 3);
-
         byAuthorIndex[msg.sender].push(post.length);
         byParentIdIndex[parentId].push(post.length);
         post.push(p);

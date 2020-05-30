@@ -13,6 +13,8 @@ contract Noncense is Ownable {
         uint16 children;
         uint16 depth;
 
+        bool isImmutable;
+
         uint parentId;
 
         string title;
@@ -20,7 +22,7 @@ contract Noncense is Ownable {
         string metadata;
     }
 
-    event NewPost(address indexed author, uint indexed id, uint indexed parentId);
+    event PostUpdated(address indexed author, uint indexed id, uint indexed parentId);
 
     postOne[] public post;
     mapping(address => uint[]) byAuthorIndex;
@@ -41,15 +43,18 @@ contract Noncense is Ownable {
         return endpoint[owner()];
     }
 
-    function newPost(string memory body, uint parentId, string memory title, string memory metadata) public {
+    function newPost(string memory body, uint parentId, string memory title, string memory metadata, bool isImmutable) public {
         postOne memory p;
 
         p.author = msg.sender;
         p.last_update = uint32(now);
         p.created = uint32(now);
+
         p.title = title;
         p.body = body;
         p.metadata = metadata;
+
+        p.isImmutable = isImmutable;
 
         require((parentId == 0) || (post[parentId].author != address(0x0)), "parentId doesn't exist");
 
@@ -61,7 +66,30 @@ contract Noncense is Ownable {
         byParentIdIndex[parentId].push(post.length);
         post.push(p);
 
-        emit NewPost(msg.sender, post.length-1, parentId);
+        emit PostUpdated(msg.sender, post.length-1, parentId);
+    }
+
+    function updatePost(uint id, string memory body, string memory title, string memory metadata) public {
+        postOne storage p = post[id];
+
+        require(p.author == msg.sender, "Only author can update post");
+        require(!p.isImmutable || (bytes(title).length == 0 && bytes(body).length == 0));
+
+        p.title = title;
+        p.body = body;
+        p.metadata = metadata;
+        p.last_update = uint32(now);
+
+        emit PostUpdated(msg.sender, id, p.parentId);
+    }
+
+    function setImmutable(uint id) public {
+        postOne storage p = post[id];
+
+        require(p.author == msg.sender, "Only author can make post immutable");
+        require(!p.isImmutable);
+
+        p.isImmutable = true;
     }
 
     /**

@@ -26,19 +26,19 @@ contract Noncense is Ownable {
     mapping(address => uint[]) byAuthorIndex;
     mapping(uint => uint[]) byParentIdIndex;
 
-    string private endpoint;
+    mapping(address => string) public endpoint;
 
     constructor() public {
         postOne memory p;
         post.push(p);
     }
 
-    function setEndpoint(string memory newEndpoint) onlyOwner public {
-        endpoint = newEndpoint;
+    function setEndpoint(string memory newEndpoint) public {
+        endpoint[msg.sender] = newEndpoint;
     }
 
-    function getEndpoint() public view returns (string memory) {
-        return endpoint;
+    function defaultEndpoint() public view returns (string memory) {
+        return endpoint[owner()];
     }
 
     function newPost(string memory body, uint parentId, string memory title, string memory metadata) public {

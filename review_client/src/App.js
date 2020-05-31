@@ -1,7 +1,10 @@
 import React from 'react';
 
 export default class App extends React.Component {
-  state = { name: 'viewers' }
+  constructor(props) {
+    super(props);
+    this.state = { name: 'viewers' };
+  }
 
   render() {
     const { name } = this.state;

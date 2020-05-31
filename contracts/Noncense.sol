@@ -5,17 +5,15 @@ import "@openzeppelin/contracts/ownership/Ownable.sol";
 contract Noncense is Ownable {
 
     struct postOne {
-        address author;
+        address author;     // 20
+        bool isImmutable;   //  1
 
-        uint32 last_update;
-        uint32 created;
+        uint64 created;     //  8
+        uint64 last_update; //  8
 
-        uint16 children;
-        uint16 depth;
-
-        bool isImmutable;
-
-        uint parentId;
+        uint64 depth;       //  8
+        uint children;      // 32
+        uint parentId;      // 32
 
         string title;
         string body;
@@ -47,8 +45,8 @@ contract Noncense is Ownable {
         postOne memory p;
 
         p.author = msg.sender;
-        p.last_update = uint32(now);
-        p.created = uint32(now);
+        p.created = uint64(now);
+        p.last_update = uint64(now);
 
         p.title = title;
         p.body = body;
@@ -78,7 +76,7 @@ contract Noncense is Ownable {
         p.title = title;
         p.body = body;
         p.metadata = metadata;
-        p.last_update = uint32(now);
+        p.last_update = uint64(now);
 
         emit PostUpdated(msg.sender, id, p.parentId);
     }

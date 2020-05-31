@@ -42,6 +42,8 @@ contract Noncense is Ownable {
     }
 
     function newPost(string memory body, uint parentId, string memory title, string memory metadata, bool isImmutable) public {
+        require((parentId == 0) || (post[parentId].author != address(0x0)), "parentId doesn't exist");
+
         postOne memory p;
 
         p.author = msg.sender;
@@ -53,8 +55,6 @@ contract Noncense is Ownable {
         p.metadata = metadata;
 
         p.isImmutable = isImmutable;
-
-        require((parentId == 0) || (post[parentId].author != address(0x0)), "parentId doesn't exist");
 
         post[parentId].children++;
         p.parentId = parentId;

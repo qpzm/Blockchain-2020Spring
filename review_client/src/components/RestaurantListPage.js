@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import NewRestaurantForm from './NewRestaurantForm'
 import RestaurantList from './RestaurantList'
+import { addRestaurant } from '../store/restaurants/actions'
 
-export default class RestaurantListPage extends Component {
+class RestaurantListPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      restaurantNames: [],
       showNewRestaurantForm: false,
     };
     this.handleAddRestaurant = this.handleAddRestaurant.bind(this);
@@ -20,19 +21,12 @@ export default class RestaurantListPage extends Component {
   }
 
   handleAddRestaurant(newRestaurantName) {
-    this.setState(state => ({
-      restaurantNames: [
-        newRestaurantName,
-        ...state.restaurantNames
-      ]
-    }));
+    this.props.addRestaurant(newRestaurantName);
   }
 
   render() {
-    const {
-      restaurantNames,
-      showNewRestaurantForm,
-    } = this.state;
+    const { restaurants } = this.props;
+    const { showNewRestaurantForm } = this.state;
     return (
       <div>
         <button
@@ -50,8 +44,20 @@ export default class RestaurantListPage extends Component {
             )
             : null
         }
-        <RestaurantList restaurantNames={restaurantNames} />
+        <RestaurantList restaurantNames={restaurants} />
       </div>
     )
   }
 }
+
+function mapStateToProps(state) {
+  return {
+    restaurants: state.restaurants,
+  }
+}
+
+const mapDispatchToProps = {
+  addRestaurant,
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(RestaurantListPage);

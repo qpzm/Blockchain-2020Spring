@@ -4,6 +4,9 @@ describe('adding a restaurant', () => {
 
     cy.visit('http://localhost:1234');
 
+    cy.get('input[data-test="newRestaurantName"]')
+      .should('not.exist');
+
     cy.get('button[data-test="addNewRestaurant"]')
       .click();
 

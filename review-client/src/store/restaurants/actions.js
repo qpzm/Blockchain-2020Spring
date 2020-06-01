@@ -71,6 +71,7 @@ export function fetchRestaurants(account, contract, pageSize=0, offset=0) {
       restaurantIds.map(async (id) => (
         await contract.methods.post(id).call({ from: account })
           .then((restaurant) => {
+            restaurant.id = id;
             try {
               restaurant.metadata = JSON.parse(restaurant.metadata);
             } catch(e) {

@@ -1,11 +1,11 @@
 import React from 'react';
 
-const RestaurantList = ({ restaurantNames }) => (
+const RestaurantList = ({ restaurants }) => (
   <ul>
     {
-      restaurantNames.map(restaurantName => (
-        <li key={restaurantName}>
-          {restaurantName}
+      restaurants.map(restaurant => (
+        <li key={restaurant.created}>
+          {restaurant.title}
         </li>
       ))
     }

@@ -67,7 +67,8 @@ export function fetchRestaurants(account, contract, pageSize=0, offset=0) {
     const restaurantIds = await contract.methods
       .getIdsByParentId(parentId, pageSize, offset) // pageSize, offset
       .call({ from: account })
-    Promise.all(
+
+    const restaurants = await Promise.all(
       restaurantIds.map(async (id) => (
         await contract.methods.post(id).call({ from: account })
           .then((restaurant) => {
@@ -80,9 +81,9 @@ export function fetchRestaurants(account, contract, pageSize=0, offset=0) {
             return restaurant;
           })
       ))
-    ).then((restaurants) => {
-      dispatch(fetchRestaurantsSuccess({restaurants}));
-    });
+    );
+
+    dispatch(fetchRestaurantsSuccess({restaurants}));
   }
 }
 
@@ -110,13 +111,21 @@ export function createRestaurant(account, contract, data) {
     const { content="", title="", metadata={"type": "restaurant"}, isImmutable=false } = data;
     const parentId = 0;
     const metadataStr = JSON.stringify(metadata);
-    contract.methods
+    await contract.methods
       .newPost(content, parentId, title, metadataStr, isImmutable)
       .send({ from: account })
-      .then((receipt) => {
-        // set pseudo created because it is the key in <li>
-        const restaurant = {...data, parentId, created: 0 };
-        dispatch(createRestaurantSuccess({restaurant}));
-      });
+    const id = await contract.methods
+      .getIdsByAuthor(account, 1, 0) // pageSize, offset
+      .call({ from: account })
+
+    let restaurant = await contract.methods.post(id).call({ from: account })
+    restaurant.id = id;
+    try {
+      restaurant.metadata = JSON.parse(restaurant.metadata);
+    } catch(e) {
+      restaurant.metadata = "";
+    }
+
+    dispatch(createRestaurantSuccess({restaurant}));
   }
 }

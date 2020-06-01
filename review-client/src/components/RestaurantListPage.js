@@ -14,8 +14,10 @@ class RestaurantListPage extends Component {
     this.state = {
       showNewRestaurantForm: false,
     };
-    this.handleCreateRestaurant = this.handleCreateRestaurant.bind(this);
-    this.handleShowNewRestaurantForm = this.handleShowNewRestaurantForm.bind(this);
+
+    // Class property syntax does not need explicit binding.
+    // this.handleCreateRestaurant = this.handleCreateRestaurant.bind(this);
+    // this.handleShowNewRestaurantForm = this.handleShowNewRestaurantForm.bind(this);
   }
 
   componentDidMount = async () => {
@@ -24,13 +26,13 @@ class RestaurantListPage extends Component {
     this.props.fetchRestaurants(accounts[0], contract);
   }
 
-  handleShowNewRestaurantForm() {
+  handleShowNewRestaurantForm = () => {
     this.setState((state) => (
       { showNewRestaurantForm: !state.showNewRestaurantForm }
     ));
   }
 
-  handleCreateRestaurant(newRestaurantName) {
+  handleCreateRestaurant = (newRestaurantName) => {
     const { accounts, contract } = this.props;
     this.props.createRestaurant(accounts[0], contract, {"title": newRestaurantName});
   }

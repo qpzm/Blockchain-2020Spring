@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 //import { connect } from 'react-redux';
 import NewRestaurantForm from './NewRestaurantForm';
 import RestaurantList from './RestaurantList';
-//import { addRestaurant } from '../store/restaurants/actions';
+//import { addrant } from '../store/restaurants/actions';
 import getWeb3 from '../store/web3';
 import NoncenseContract from '../contracts/Noncense.js';
 
@@ -10,7 +10,7 @@ class RestaurantListPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      posts: [],
+      restaurants: [],
       showNewRestaurantForm: false,
       web3: null,
       accounts: null,
@@ -32,28 +32,32 @@ class RestaurantListPage extends Component {
       deployedNetwork && deployedNetwork.address,
     );
 
-    // Set web3, accounts, and contract to the state, and then proceed with an
-    // example of interacting with the contract's methods.
-    this.setState({ web3, accounts, contract: instance }, this.fetchData)
+    this.setState({ web3, accounts, contract: instance }, this.fetchRestaurants)
   }
 
-  fetchData = async () => {
+  fetchRestaurants = async () => {
     const { accounts, contract } = this.state;
 
     await contract.methods.getIdsByParentId(0, 0, 0).call({ from: accounts[0] })
-      .then((postIds) => {
-        postIds.forEach(async (postId) => {
-          await contract.methods.post(postId).call({ from: accounts[0] })
-            .then((post) => {
-              this.setState((state) => ({ posts: [...state.posts, post] }));
+      .then((restaurantIds) => {
+        restaurantIds.forEach(async (id) => {
+          await contract.methods.post(id).call({ from: accounts[0] })
+            .then((restaurant) => {
+              try {
+                restaurant.metadata = JSON.parse(restaurant.metadata);
+              } catch(e) {
+                restaurant.metadata = "";
+              }
+              this.setState((state) => ({ restaurants: [...state.restaurants, restaurant] }));
             })
         });
       });
   };
 
-  createPost = async (content, title, metadata={}, isImmutable=false) => {
+  createRestaurant = async (content, title, metadata={}, isImmutable=false) => {
     const { accounts, contract } = this.state;
-    await contract.methods.newPost(content, 0, title, metadata, isImmutable)
+    const metadataStr = JSON.stringify(metadata);
+    await contract.methods.newPost(content, 0, title, metadataStr, isImmutable)
       .send({ from: accounts[0] })
       .then((event) => { console.log(event) });
   }
@@ -66,12 +70,13 @@ class RestaurantListPage extends Component {
 
   async handleAddRestaurant(newRestaurantName) {
     //this.props.addRestaurant(newRestaurantName);
-    this.createPost("", newRestaurantName);
+    const metadata = {"type": "restaurant"};
+    this.createRestaurant("", newRestaurantName, metadata);
   }
 
   render() {
     //const { restaurants } = this.props;
-    const { showNewRestaurantForm, posts } = this.state;
+    const { showNewRestaurantForm, restaurants } = this.state;
     return (
       <div>
         <button
@@ -89,7 +94,7 @@ class RestaurantListPage extends Component {
             )
             : null
         }
-        <RestaurantList restaurants={posts} />
+        <RestaurantList restaurants={restaurants} />
       </div>
     )
   }

@@ -57,6 +57,7 @@ class RestaurantListPage extends Component {
             )
             : null
         }
+        { /* FIXME restaurants is empty when I refresh at the detail page and return back. */}
         <RestaurantList restaurants={restaurants} />
       </div>
     )

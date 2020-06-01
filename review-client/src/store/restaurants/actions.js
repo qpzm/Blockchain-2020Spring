@@ -59,32 +59,59 @@ const fetchRestaurantsSuccess = ({restaurants}) => {
   }
 }
 
-export function fetchRestaurants(account, contract, pageSize=0, offset=0) {
+export function fetchRestaurants(account, contract, pageSize, offset) {
   return async function(dispatch) {
     dispatch(fetchRestaurantsRequest());
-    const parentId = 0;
-
-    const restaurantIds = await contract.methods
-      .getIdsByParentId(parentId, pageSize, offset) // pageSize, offset
-      .call({ from: account })
-
-    const restaurants = await Promise.all(
-      restaurantIds.map(async (id) => (
-        await contract.methods.post(id).call({ from: account })
-          .then((restaurant) => {
-            restaurant.id = id;
-            try {
-              restaurant.metadata = JSON.parse(restaurant.metadata);
-            } catch(e) {
-              restaurant.metadata = "";
-            }
-            return restaurant;
-          })
-      ))
-    );
-
+    const restaurants = await fetchPosts(account, contract, 0, pageSize, offset);
     dispatch(fetchRestaurantsSuccess({restaurants}));
   }
+}
+
+export const FETCH_REVIEWS_REQUEST = 'FETCH_REVIEWS_REQUEST';
+export const FETCH_REVIEWS_SUCCESS = 'FETCH_REVIEWS_SUCCESS';
+export const FETCH_REVIEWS_FAILURE = 'FETCH_REVIEWS_FAILURE';
+
+const fetchReviewsRequest = () => {
+  return {
+    type: FETCH_REVIEWS_REQUEST,
+  }
+}
+
+const fetchReviewsSuccess = ({reviews, restaurantId}) => {
+  return {
+    type: FETCH_REVIEWS_SUCCESS,
+    restaurantId,
+    reviews,
+  }
+}
+
+export function fetchReviews(account, contract, restaurantId, pageSize, offset) {
+  return async function(dispatch) {
+    dispatch(fetchReviewsRequest());
+    const reviews = await fetchPosts(account, contract, restaurantId, pageSize, offset);
+    dispatch(fetchReviewsSuccess({reviews, restaurantId}));
+  }
+}
+
+async function fetchPosts(account, contract, parentId, pageSize=0, offset=0) {
+  const postIds = await contract.methods
+    .getIdsByParentId(parentId, pageSize, offset) // pageSize, offset
+    .call({ from: account })
+
+  const posts = await Promise.all(
+    postIds.map(async (id) => {
+      let post = await contract.methods.post(id).call({ from: account });
+      post.id = id;
+      try {
+        post.metadata = JSON.parse(post.metadata);
+      } catch(e) {
+        post.metadata = "";
+      }
+      return post;
+    })
+  );
+
+  return posts;
 }
 
 
@@ -106,26 +133,67 @@ const createRestaurantSuccess = ({restaurant}) => {
 };
 
 export function createRestaurant(account, contract, data) {
+  const { body, title, metadata="", isImmutable } = data;
+  data.metadata = JSON.stringify(metadata);
+
   return async function(dispatch) {
     dispatch(createRestaurantRequest());
-    const { content="", title="", metadata={"type": "restaurant"}, isImmutable=false } = data;
-    const parentId = 0;
-    const metadataStr = JSON.stringify(metadata);
-    await contract.methods
-      .newPost(content, parentId, title, metadataStr, isImmutable)
-      .send({ from: account })
-    const id = await contract.methods
-      .getIdsByAuthor(account, 1, 0) // pageSize, offset
-      .call({ from: account })
-
-    let restaurant = await contract.methods.post(id).call({ from: account })
-    restaurant.id = id;
-    try {
-      restaurant.metadata = JSON.parse(restaurant.metadata);
-    } catch(e) {
-      restaurant.metadata = "";
-    }
-
+    const restaurant = await createPost(account, contract, 0, data);
     dispatch(createRestaurantSuccess({restaurant}));
   }
+}
+
+
+export const CREATE_REVIEW_REQUEST = 'CREATE_REVIEW_REQUEST';
+export const CREATE_REVIEW_SUCCESS = 'CREATE_REVIEW_SUCCESS';
+export const CREATE_REVIEW_FAILURE = 'CREATE_REVIEW_FAILURE';
+
+const createReviewRequest = () => {
+  return {
+    type: CREATE_REVIEW_REQUEST,
+  }
+};
+
+const createReviewSuccess = ({review}) => {
+  return {
+    type: CREATE_REVIEW_SUCCESS,
+    review,
+  }
+};
+
+export function createReview(account, contract, restaurantId, body, points=0) {
+  const metadata = JSON.stringify({ points });
+  const data = { body, metadata };
+
+  return async function(dispatch) {
+    dispatch(createReviewRequest());
+    const review = await createPost(account, contract, restaurantId, data);
+    dispatch(createReviewSuccess({review}));
+  }
+}
+
+async function createPost(account, contract, parentId, data) {
+  const { body="", title="", metadata="", isImmutable=false } = data;
+
+  await contract.methods
+    .newPost(body, parentId, title, metadata, isImmutable)
+    .send({ from: account })
+
+  const id = await contract.methods
+    .getIdsByAuthor(account, 1, 0) // pageSize, offset
+    .call({ from: account })
+
+  let post = await contract.methods
+    .post(id)
+    .call({ from: account })
+
+  post.id = id;
+
+  try {
+    post.metadata = JSON.parse(post.metadata);
+  } catch(e) {
+    post.metadata = "";
+  }
+
+  return post;
 }

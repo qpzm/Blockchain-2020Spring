@@ -161,7 +161,7 @@ const createReviewSuccess = ({review}) => {
   }
 };
 
-export function createReview(account, contract, restaurantId, body, points=0) {
+export function createReview(account, contract, restaurantId, body, points=3) {
   const metadata = JSON.stringify({ points });
   const data = { body, metadata };
 

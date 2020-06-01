@@ -6,7 +6,8 @@ import {
   fetchReviews,
   createReview,
 } from '../store/restaurants/actions';
-import NewRestaurantForm from './NewRestaurantForm'
+import NewReviewForm from './NewReviewForm'
+import ReviewList from './ReviewList'
 
 class RestaurantDetailPage extends Component {
   componentDidMount = async () => {
@@ -21,7 +22,7 @@ class RestaurantDetailPage extends Component {
     this.props.fetchReviews(accounts[0], contract, restaurantId);
   }
 
-  handleCreateReview = (body) => {
+  handleCreateReview = (body, points) => {
     const {
       match: {
         params: { restaurantId }
@@ -30,8 +31,7 @@ class RestaurantDetailPage extends Component {
       contract,
     } = this.props;
 
-    // TODO pass points
-    this.props.createReview(accounts[0], contract, restaurantId, body);
+    this.props.createReview(accounts[0], contract, restaurantId, body, points);
   }
 
   render() {
@@ -44,9 +44,10 @@ class RestaurantDetailPage extends Component {
     return (
       <div>
         <h3>Restaurant {restaurantId}</h3>
-        <NewRestaurantForm
+        <NewReviewForm
           onSave={this.handleCreateReview}
         />
+        <ReviewList reviews={reviews[restaurantId] || []} />
       </div>
     );
   }

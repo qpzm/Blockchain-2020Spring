@@ -44,12 +44,16 @@ const restaurants = (state = initalState, action) => {
         }
       });
     case actions.CREATE_REVIEW_SUCCESS:
+      const previousReviews =
+        state.reviews[action.review.parentId]
+        ? state.reviews[action.review.parentId]
+        : [];
       return Object.assign({}, state, {
         reviews: {
           ...state.reviews,
           [action.review.parentId]: [
             action.review,
-            ...state.reviews[action.review.parentId]
+            ...previousReviews,
           ],
         }
       });

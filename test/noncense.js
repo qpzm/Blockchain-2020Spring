@@ -7,7 +7,7 @@ contract("Noncense", accounts => {
   beforeEach(async () => { noncense = await Noncense.new() });
 
   it("newPost() should create new post with given contents", async () => {
-    await noncense.newPost("Hello Noncense", 0, "", "");
+    await noncense.newPost("Hello Noncense", 0, "", "", false);
 
     const post = await noncense.post.call(1);
     expect(post.body).to.equal("Hello Noncense");
@@ -16,7 +16,7 @@ contract("Noncense", accounts => {
   it("getIdsByAuthor() should return post ids written by the author", async () => {
     // accounts[0] is the default msg.sender who wrote the root post, so use another one.
     const author = accounts[1];
-    await noncense.newPost("", 0, "", "", { from: author });
+    await noncense.newPost("", 0, "", "", false, { from: author });
     const postId = 1
     const postIds = await noncense.getIdsByAuthor(author, 0, 0)
 
@@ -24,10 +24,10 @@ contract("Noncense", accounts => {
   });
 
   it("getIdsByParentId() should return its children ids", async () => {
-    await noncense.newPost("I'm the parent post!", 0, "", "");
+    await noncense.newPost("I'm the parent post!", 0, "", "", false);
     const parentId = 1
 
-    await noncense.newPost("I'm the most recent post!", parentId, "", "");
+    await noncense.newPost("I'm the most recent post!", parentId, "", "", false);
     const childId = 2
     const childIds = await noncense.getIdsByParentId(parentId, 0, 0)
 

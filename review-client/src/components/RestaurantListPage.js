@@ -21,7 +21,9 @@ class RestaurantListPage extends Component {
   }
 
   componentDidMount = async () => {
-    await this.props.fetchContract();
+    if(this.props.contract === null) {
+      await this.props.fetchContract();
+    }
     const { accounts, contract } = this.props;
     this.props.fetchRestaurants(accounts[0], contract);
   }

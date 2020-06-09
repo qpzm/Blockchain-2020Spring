@@ -17,7 +17,9 @@ class RestaurantDetailPage extends Component {
       }
     } = this.props;
 
-    await this.props.fetchContract();
+    if(this.props.contract === null) {
+      await this.props.fetchContract();
+    }
     const { accounts, contract } = this.props;
     this.props.fetchReviews(accounts[0], contract, restaurantId);
   }

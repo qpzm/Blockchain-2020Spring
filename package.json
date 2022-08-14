@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/qpzm/Blockchain-2020Spring#readme",
   "devDependencies": {
-    "@openzeppelin/contracts": "^2.3.0",
+    "@openzeppelin/contracts": "^4.7.2",
     "truffle": "^5.1.26",
     "@truffle/hdwallet-provider": "^1.0.35",
     "dotenv": "^8.2.0"
